@@ -1,0 +1,69 @@
+#home-weather-srb table,
+#home-weather-28days table,
+#home-weather-24hrs table,
+#home-weather-7days table
+  {width: 80%; margin-left: auto; margin-right: auto; text-align: center}
+#home-astro-scope table
+  {width: 90%; margin-left: auto; margin-right: auto}
+
+#header table,
+#footer table
+  {width: 100%}
+
+#header img,
+#footer img
+  {border: 0px; margin: 0px}
+
+#footer td.left_3
+  {text-align: left; width: 35%}
+#footer td.mid_3
+  {text-align: center; width: 30%}
+#footer td.right
+  {text-align: right}
+
+td.left_3
+  {text-align: left; width: 25%}
+td.mid_3
+  {text-align: center; width: 50%}
+td.left_4
+  {text-align: left; width: 17%}
+td.mid_4
+  {text-align: center; width: 33%}
+.left
+  {text-align: left}
+.mid
+  {text-align: center}
+.right
+  {text-align: right}
+
+table
+  {width: 100%}
+
+img
+  {border: 0px;margin: 4px}
+
+h1
+  {text-align: center}
+
+.image_left p
+  {text-align: left}
+.image_left img
+  {float: left}
+
+.image_right p
+  {text-align: right}
+.image_right img
+  {float: right}
+
+.image_main p
+  {text-align: center}
+.image_main img
+  {display: block; margin-left: auto; margin-right: auto}
+
+@media print
+{
+  #header
+    {display: none}
+  .noprint
+    {display: none}
+}

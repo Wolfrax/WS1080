@@ -1,0 +1,3 @@
+ACTION!="add|change", GOTO="station_end"
+SUBSYSTEM=="usbmisc", ATTRS{idVendor}=="1941", ATTRS{idProduct}=="8021", GROUP="weather"
+LABEL="station_end"

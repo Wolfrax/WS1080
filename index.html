@@ -1,0 +1,222 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
+    <title>Weather at Viltstigen</title>
+    <script type="text/javascript" src="https://code.highcharts.com/highcharts.js"></script>
+    <script type="text/javascript" src="https://code.highcharts.com/highcharts-more.js"></script>
+    <script type="text/javascript" src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script type="text/javascript" src="js/ws.js"></script>
+    <script type="text/javascript" src="js/jquery-1.8.3.min.js"></script>
+    <script type="text/javascript" src="js/jquery-ui.js"></script>
+    <link rel="stylesheet" href="js/jquery-ui.css">
+    <link rel="stylesheet" href="js/ws.css">
+
+    <style>
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 5px;
+            text-align: left;
+        }
+
+        table#tbCurrentData {
+            width: 100%;
+        }
+    </style>
+
+</head>
+
+<body onload="WS();">
+
+<div id="header">
+    <h2>Weather at Viltstigen 3, Lund</h2>
+    <h4 id="hdCurrentData"></h4>
+</div>
+
+<div id="CurrentData">
+    <table id="tbCurrentData">
+        <thead>
+        <tr>
+            <th>Temperature outside</th>
+            <th>Temperature inside</th>
+            <th>Humidity outside</th>
+            <th>Humidity inside</th>
+            <th>Rain</th>
+            <th>Average Wind speed</th>
+            <th>Gust Wind speed</th>
+            <th>Absolute pressure</th>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+
+<hr id="break1">
+
+<div id="subheadHourly">
+    <h3>Hourly</h3>
+</div>
+
+<!--Hourly graph-->
+
+<div id="datePickerHourly">
+    <label for="dateFromHourly">From</label>
+    <input type="text" id="dateFromHourly" name="dateFrom"/>
+    <label for="dateToHourly">To</label>
+    <input type="text" id="dateToHourly" name="dateTo"/>
+</div>
+
+<div id="graphTempOutHourly"></div>
+<div id="graphTempInHourly"></div>
+<div id="graphRainHourly"></div>
+<div id="graphAbsPresHourly"></div>
+<div id="graphHumidityHourly"></div>
+<div id="graphWindSpeedHourly"></div>
+<div id="graphWindDirHourly"></div>
+
+<div id="footer">Mats Melander (c)</div>
+
+<script type="text/javascript">
+    function WS() {
+        var Plot = new Plotter();
+        var startDatePeriod = new Date();
+        var stopDatePeriod = new Date();
+        var dateHourlyFrom = $("#dateFromHourly");
+        var dateHourlyTo = $("#dateToHourly");
+
+        dateHourlyFrom.val($.datepicker.formatDate("yy-mm-dd", startDatePeriod));
+        dateHourlyTo.val($.datepicker.formatDate("yy-mm-dd", stopDatePeriod));
+
+        dateHourlyFrom.datepicker({
+            maxDate: "0d",
+            defaultDate: "-1d",
+            dateFormat: "yy-mm-dd",
+            onClose: function (selectedDate) {
+                dateHourlyTo.datepicker("option", "minDate", selectedDate);
+                updateHourly();
+            }
+        });
+
+        dateHourlyTo.datepicker({
+            maxDate: "0d",
+            defaultDate: "0d",
+            dateFormat: "yy-mm-dd",
+            onClose: function (selectedDate) {
+                dateHourlyFrom.datepicker("option", "maxDate", selectedDate);
+                updateHourly();
+            }
+        });
+
+        function Minute(series) {
+            var lastInd = series.length - 1;
+            var dt = new Date(series[lastInd]['time']);
+            var rows;
+
+            rows = "<tr><td>" +
+                    Math.round(series[lastInd]['outdoor_temp'] * 10) / 10 + "</td><td>" +
+                    Math.round(series[lastInd]['indoor_temp'] * 10) / 10 + "</td><td>" +
+                    Math.round(series[lastInd]['outdoor_humidity'] * 10) / 10 + "</td><td>" +
+                    Math.round(series[lastInd]['indoor_humidity'] * 10) / 10 + "</td><td>" +
+                    Math.round(series[lastInd]['rain'] * 10) / 10 + "</td><td>" +
+                    Math.round(series[lastInd]['ave_wind_speed'] * 10) / 10 + "</td><td>" +
+                    Math.round(series[lastInd]['gust_wind_speed'] * 10) / 10 + "</td><td>" +
+                    Math.round(series[lastInd]['abs_pressure'] * 10) / 10 +
+                    "</td></tr>";
+
+            $("#tbCurrentData tbody").empty();
+            $(rows).appendTo("#tbCurrentData tbody");
+            $("#hdCurrentData").html("Current data (" + dt.toLocaleString("sv-se") + ")");
+        }
+
+        function Hourly(series) {
+            var i;
+            var out_temp_averages = [];
+            var out_temp_ranges = [];
+            var in_temp_averages = [];
+            var in_temp_ranges = [];
+            var rain_averages = [];
+            var abs_pressure_averages = [];
+            var abs_pressure_ranges = [];
+            var out_humidity = [];
+            var in_humidity = [];
+            var ave_wind_speed = [];
+            var gust_wind_speed = [];
+            var wind_dir = [];
+            var wind_data = [];
+
+            for (i = 0; i < series.length; i++) {
+                out_temp_averages.push([series[i]["time"], Math.round(series[i]["outdoor_temp"] * 10) / 10]);
+                out_temp_ranges.push([series[i]["time"], Math.round(series[i]["outdoor_temp_min"] * 10) / 10,
+                    Math.round(series[i]["outdoor_temp_max"] * 10) / 10]);
+                in_temp_averages.push([series[i]["time"], Math.round(series[i]["indoor_temp"] * 10) / 10]);
+                in_temp_ranges.push([series[i]["time"], Math.round(series[i]["indoor_temp_min"] * 10) / 10,
+                    Math.round(series[i]["indoor_temp_max"] * 10) / 10]);
+                rain_averages.push([series[i]["time"], Math.round(series[i]["rain_ave"] * 10) / 10]);
+                abs_pressure_averages.push([series[i]["time"], Math.round(series[i]["abs_pressure"] * 10) / 10]);
+                abs_pressure_ranges.push([series[i]["time"], Math.round(series[i]["abs_pressure_min"] * 10) / 10,
+                    Math.round(series[i]["abs_pressure_max"] * 10) / 10]);
+                out_humidity.push([series[i]["time"], Math.round(series[i]["outdoor_humidity"] * 10) / 10]);
+                in_humidity.push([series[i]["time"], Math.round(series[i]["indoor_humidity"] * 10) / 10]);
+                ave_wind_speed.push([series[i]["time"], Math.round(series[i]["ave_wind_speed"] * 10) / 10]);
+                gust_wind_speed.push([series[i]["time"], Math.round(series[i]["gust_wind_speed"] * 10) / 10]);
+                wind_data.push([series[i]["wind_dir"], series[i]["ave_wind_speed"]]);
+            }
+            Plot.tempOut(out_temp_averages, out_temp_ranges);
+            Plot.tempIn(in_temp_averages, in_temp_ranges);
+            Plot.rain(rain_averages);
+            Plot.abs_pressure(abs_pressure_averages, abs_pressure_ranges);
+            Plot.humidity(out_humidity, in_humidity);
+            Plot.wind_speed(ave_wind_speed, gust_wind_speed);
+            Plot.wind_dir(wind_data);
+        }
+
+        function updateHourly() {
+            var startTime = new Date(dateHourlyFrom.val()).setHours(0); // from beginning of day
+            var stopTime = new Date(dateHourlyTo.val()).setHours(24);  // to midnight
+
+            $.ajax({
+                url: "/ws/hourly",
+                method: 'GET',
+                data: {
+                    StartTime: startTime,
+                    StopTime: stopTime
+                },
+                dataType: 'json',
+                cache: false
+            }).done(function (series) {
+                setTimeout(updateHourly, 60 * 1000);
+                Hourly(series);
+            });
+        }
+
+        function updateMinute() {
+            var startTime = new Date(dateHourlyFrom.val()).setHours(0); // from beginning of day
+            var stopTime = new Date(dateHourlyTo.val()).setHours(24);  // to midnight
+
+            $.ajax({
+                url: "/ws/minute",
+                method: 'GET',
+                data: {
+                    StartTime: startTime,
+                    StopTime: stopTime
+                },
+                dataType: 'json',
+                cache: false
+            }).done(function (series) {
+                setTimeout(updateMinute, 60 * 1000);
+                Minute(series);
+            });
+        }
+
+        updateMinute();
+        updateHourly();
+
+    }
+</script>
+</body>
+</html>
