@@ -21,7 +21,17 @@ DEVICE_CTRL_TIMEOUT = 1200
 
 
 class Device:
+    """
+    Implements the basic communication with the device over pyusb
+    """
+
     def __init__(self, id_vendor=0x1941, id_product=0x8021):
+        """
+        Initialise the Device by opening and claiming the USB interface
+        :param id_vendor: Vendor for WH1080, normally 0x1941
+        :param id_product: Product for WH1080, normally 0x80291
+        :return: Nothing
+        """
         self.logger = logging.getLogger('WS1080.WS.device')
         self.logger.debug('init')
 
@@ -46,6 +56,11 @@ class Device:
             raise IOError("device - open: Device not opened")
 
     def preamble(self, data):
+        """
+
+        :param data: The preamble sequence to enabler reading
+        :return: the number of bytes successfully written, None if unsuccessful
+        """
         self.preamble_flag = True
 
         try:
@@ -68,6 +83,11 @@ class Device:
         return result
 
     def read(self, buf):
+        """
+        Read from the device into using buf
+        :param buf: Number of bytes to read
+        :return: the result as a list
+        """
         assert self.preamble_flag
         self.preamble_flag = False
 

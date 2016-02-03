@@ -107,12 +107,13 @@ class WS:
             return None
 
         if self.fixedPar['state']['current_pos'] != fixed_data['state']['current_pos']:
+            old_pos = self.fixedPar['state']['current_pos']
             self.dataDef = data_def
             self.fixedPar = fixed_data
 
-            if ((fixed_data['state']['current_pos'] - self.fixedPar['state']['current_pos'] > E2PROM_CHUNK_HALF) or
+            if ((fixed_data['state']['current_pos'] - old_pos > E2PROM_CHUNK_HALF) or
                 (fixed_data['state']['current_pos'] == E2PROM_START_VARIABLE and
-                 self.fixedPar['state']['current_pos'] != E2PROM_END_ADDRESS - E2PROM_CHUNK_HALF)):
+                 old_pos != E2PROM_END_ADDRESS - E2PROM_CHUNK_HALF)):
                 self.logger.warning('New pos (%d) distance not correct, previous pos (%d)',
                                     fixed_data['state']['current_pos'],
                                     self.fixedPar['state']['current_pos'])
