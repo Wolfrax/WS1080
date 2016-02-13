@@ -99,16 +99,10 @@ function Plotter() {
         });
     };
 
-    this.rain = function (averages) {
+    this.rain = function (rain, rain_acc) {
         new Highcharts.Chart({
             chart: {
-                //type: 'column',
                 renderTo: graphRainHourly
-            },
-            plotOptions: {
-                series: {
-                    pointWidth: 0
-                }
             },
             xAxis: {
                 type: 'datetime'
@@ -130,15 +124,24 @@ function Plotter() {
                 shared: true,
                 valueSuffix: ' mm'
             },
-            legend: {},
             series: [{
                 name: 'Rain',
-                data: averages,
+                data: rain,
+                type: 'spline',
                 zIndex: 1,
                 marker: {
                     fillColor: 'white',
                     lineWidth: 2,
                     lineColor: Highcharts.getOptions().colors[0]
+                }}, {
+                name: 'Accumulated',
+                data: rain_acc,
+                type: 'spline',
+                zIndex: 1,
+                marker: {
+                    fillColor: 'white',
+                    lineWidth: 2,
+                    lineColor: Highcharts.getOptions().colors[1]
                 }
             }]
         });

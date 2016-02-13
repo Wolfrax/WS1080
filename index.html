@@ -139,7 +139,8 @@
             var out_temp_ranges = [];
             var in_temp_averages = [];
             var in_temp_ranges = [];
-            var rain_averages = [];
+            var rain = [];
+            var rain_acc = [];
             var abs_pressure_averages = [];
             var abs_pressure_ranges = [];
             var out_humidity = [];
@@ -156,7 +157,9 @@
                 in_temp_averages.push([series[i]["time"], Math.round(series[i]["indoor_temp"] * 10) / 10]);
                 in_temp_ranges.push([series[i]["time"], Math.round(series[i]["indoor_temp_min"] * 10) / 10,
                     Math.round(series[i]["indoor_temp_max"] * 10) / 10]);
-                rain_averages.push([series[i]["time"], Math.round(series[i]["rain_ave"] * 10) / 10]);
+                rain.push([series[i]["time"], Math.round(series[i]["rain"] * 10) / 10]);
+                rain_acc.push([series[i]["time"],
+                    Math.round((series[i]["rain_total"] - series[0]["rain_total"])* 10) / 10]);
                 abs_pressure_averages.push([series[i]["time"], Math.round(series[i]["abs_pressure"] * 10) / 10]);
                 abs_pressure_ranges.push([series[i]["time"], Math.round(series[i]["abs_pressure_min"] * 10) / 10,
                     Math.round(series[i]["abs_pressure_max"] * 10) / 10]);
@@ -168,7 +171,7 @@
             }
             Plot.tempOut(out_temp_averages, out_temp_ranges);
             Plot.tempIn(in_temp_averages, in_temp_ranges);
-            Plot.rain(rain_averages);
+            Plot.rain(rain, rain_acc);
             Plot.abs_pressure(abs_pressure_averages, abs_pressure_ranges);
             Plot.humidity(out_humidity, in_humidity);
             Plot.wind_speed(ave_wind_speed, gust_wind_speed);

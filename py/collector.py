@@ -162,8 +162,12 @@ class WS1080:
             self.logger.warning("Sync, rec is none! Skipping...")
             return
 
-        if (self.cl_min.count() == 0) or (rec['rain_total'] < self.init_rain):
-            # Collection is empty, first time usage, or rain counter in station has been reset/wrapped
+        if rec['rain_total'] < self.init_rain:
+            self.logger.warning("Sync, bad rain_total: %d, init_rain: %d", rec['rain_total'], self.init_rain)
+            return
+
+        if self.cl_min.count() == 0:
+            # Collection is empty, first time usage
             self.logger.info("Update Total rain in ini file: from %.1f to %.1f" % (self.init_rain, rec['rain_total']))
 
             self.init_rain = rec['rain_total']
