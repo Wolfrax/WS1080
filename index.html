@@ -159,7 +159,7 @@
                     Math.round(series[i]["indoor_temp_max"] * 10) / 10]);
                 rain.push([series[i]["time"], Math.round(series[i]["rain"] * 10) / 10]);
                 rain_acc.push([series[i]["time"],
-                    Math.round((series[i]["rain_total"] - series[0]["rain_total"])* 10) / 10]);
+                    Math.round((series[i]["rain_total"] - series[0]["rain_total"] + series[0]["rain"]) * 10) / 10]);
                 abs_pressure_averages.push([series[i]["time"], Math.round(series[i]["abs_pressure"] * 10) / 10]);
                 abs_pressure_ranges.push([series[i]["time"], Math.round(series[i]["abs_pressure_min"] * 10) / 10,
                     Math.round(series[i]["abs_pressure_max"] * 10) / 10]);
