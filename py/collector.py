@@ -9,6 +9,7 @@ from datetime import datetime
 import util
 import ws
 from pymongo import MongoClient
+from pymongo import errors
 import platform
 
 __author__ = 'mm'
@@ -156,69 +157,73 @@ class WS1080:
         self.timer.cancel()
 
     def sync(self):
-        rec = self.ws.read()
+        try:
+            rec = self.ws.read()
 
-        if rec is None:
-            self.logger.warning("Sync, rec is none! Skipping...")
-            return
+            if rec is None:
+                self.logger.warning("Sync, rec is none! Skipping...")
+                return
 
-        if rec['rain_total'] < self.init_rain:
-            self.logger.warning("Sync, bad rain_total: %d, init_rain: %d", rec['rain_total'], self.init_rain)
-            return
+            if rec['rain_total'] < self.init_rain:
+                self.logger.warning("Sync, bad rain_total: %d, init_rain: %d", rec['rain_total'], self.init_rain)
+                return
 
-        if self.cl_min.count() == 0:
-            # Collection is empty, first time usage
-            self.logger.info("Update Total rain in ini file: from %.1f to %.1f" % (self.init_rain, rec['rain_total']))
+            if self.cl_min.count() == 0:
+                # Collection is empty, first time usage
+                self.logger.info("Update Total rain in ini file: from %.1f to %.1f" % (self.init_rain, rec['rain_total']))
 
-            self.init_rain = rec['rain_total']
+                self.init_rain = rec['rain_total']
 
-            # Update init vector and write for ini-file
-            self.init["Init"]["Total rain"] = self.init_rain
-            json.dump(self.init, open("ws.ini", "w"), indent=4)
+                # Update init vector and write for ini-file
+                self.init["Init"]["Total rain"] = self.init_rain
+                json.dump(self.init, open("ws.ini", "w"), indent=4)
 
-        # init_rain is total accumulated rain since weather station reset, calculate the diff
-        rec['rain_total'] = rec['rain_total'] - self.init_rain
-        rec['rain'] = rec['rain_total'] - self.prev_rain
-        self.prev_rain = rec['rain_total']
+            # init_rain is total accumulated rain since weather station reset, calculate the diff
+            rec['rain_total'] = rec['rain_total'] - self.init_rain
+            rec['rain'] = rec['rain_total'] - self.prev_rain
+            self.prev_rain = rec['rain_total']
 
-        if not rec_ok(rec):
-            self.logger.warning("Sync, bad rec! Skipping...")
-            self.logger.warning("%s", json.dumps(rec, indent=4, separators=(',', ': ')))
-            self.logger.warning("Sync, init_rain: %d prev_rain: %d", self.init_rain, self.prev_rain)
-            return
+            if not rec_ok(rec):
+                self.logger.warning("Sync, bad rec! Skipping...")
+                self.logger.warning("%s", json.dumps(rec, indent=4, separators=(',', ': ')))
+                self.logger.warning("Sync, init_rain: %d prev_rain: %d", self.init_rain, self.prev_rain)
+                return
 
-        rec = init_rec(rec)
+            rec = init_rec(rec)
 
-        self.cl_min.insert_one(rec)
+            self.cl_min.insert_one(rec)
 
-        base_time = datetime.now()
+            base_time = datetime.now()
 
-        hour_stamp = base_time.replace(minute=0, second=0, microsecond=0)
-        ts = util.msecs(hour_stamp)
-        src_posts = self.cl_min.find({'time': {"$gte": ts}})
-        sum_post = posts_to_sum_post(src_posts, hour_stamp)
-        self.cl_hourly.replace_one({'time': ts}, sum_post, upsert=True)
+            hour_stamp = base_time.replace(minute=0, second=0, microsecond=0)
+            ts = util.msecs(hour_stamp)
+            src_posts = self.cl_min.find({'time': {"$gte": ts}})
+            sum_post = posts_to_sum_post(src_posts, hour_stamp)
+            self.cl_hourly.replace_one({'time': ts}, sum_post, upsert=True)
 
-        day_stamp = base_time.replace(hour=0, minute=0, second=0, microsecond=0)
-        ts = util.msecs(day_stamp)
-        src_posts = self.cl_hourly.find({'time': {"$gte": ts}})
-        sum_post = posts_to_sum_post(src_posts, day_stamp)
-        self.cl_daily.replace_one({'time': ts}, sum_post, upsert=True)
+            day_stamp = base_time.replace(hour=0, minute=0, second=0, microsecond=0)
+            ts = util.msecs(day_stamp)
+            src_posts = self.cl_hourly.find({'time': {"$gte": ts}})
+            sum_post = posts_to_sum_post(src_posts, day_stamp)
+            self.cl_daily.replace_one({'time': ts}, sum_post, upsert=True)
 
-        month_stamp = base_time.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        ts = util.msecs(month_stamp)
-        src_posts = self.cl_daily.find({'time': {"$gte": ts}})
-        sum_post = posts_to_sum_post(src_posts, month_stamp)
-        self.cl_monthly.replace_one({'time': ts}, sum_post, upsert=True)
+            month_stamp = base_time.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            ts = util.msecs(month_stamp)
+            src_posts = self.cl_daily.find({'time': {"$gte": ts}})
+            sum_post = posts_to_sum_post(src_posts, month_stamp)
+            self.cl_monthly.replace_one({'time': ts}, sum_post, upsert=True)
 
-        year_stamp = base_time.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
-        ts = util.msecs(year_stamp)
-        src_posts = self.cl_monthly.find({'time': {"$gte": ts}})
-        sum_post = posts_to_sum_post(src_posts, year_stamp)
-        self.cl_yearly.replace_one({'time': ts}, sum_post, upsert=True)
+            year_stamp = base_time.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+            ts = util.msecs(year_stamp)
+            src_posts = self.cl_monthly.find({'time': {"$gte": ts}})
+            sum_post = posts_to_sum_post(src_posts, year_stamp)
+            self.cl_yearly.replace_one({'time': ts}, sum_post, upsert=True)
 
-        # Remove old records
-        self.cl_min.remove({'time': {"$lt": util.msecs(base_time) - ONE_HOUR}})
+            # Remove old records
+            self.cl_min.remove({'time': {"$lt": util.msecs(base_time) - ONE_HOUR}})
+
+        except errors.ServerSelectionTimeoutError, e:
+            self.logger.warning("Mongo DB error in sync: %s" % e)
 
 
 def mongo_running():
