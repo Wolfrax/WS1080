@@ -68,7 +68,7 @@ def time_to_bcd_str(t):
 
 def to_signed_short(byte_high, byte_low):
     sign = -1 if (byte_high & 0x80) else +1
-    return sign * (((byte_high & 0x7F) << 3) | byte_low)
+    return sign * (((byte_high & 0x7F) << 8) | byte_low)
 
 
 def to_unsigned_short_str(n):
