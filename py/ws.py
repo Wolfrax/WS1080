@@ -39,20 +39,23 @@ class E2PROM:
         offset = E2PROM_CHUNK if offset < E2PROM_CHUNK else offset
 
         chunks = offset / E2PROM_CHUNK
-        for ind in range(chunks):
-            if not self.device.preamble(cmd):
-                return None
-            res = self.device.read(E2PROM_CHUNK)
-            if res is None:
-                return None
-            bfr += res
-            address += E2PROM_CHUNK
-            cmd[1] = address / E2PROM_OFFSET  # update high address to next position
-            cmd[2] = address % E2PROM_OFFSET  # update low address to next position
 
-        self.lock.release()
-
-        return bfr
+        try:
+            for ind in range(chunks):
+                if not self.device.preamble(cmd):
+                    bfr = None
+                    break
+                res = self.device.read(E2PROM_CHUNK)
+                if res is None:
+                    bfr = None
+                    break
+                bfr += res
+                address += E2PROM_CHUNK
+                cmd[1] = address / E2PROM_OFFSET  # update high address to next position
+                cmd[2] = address % E2PROM_OFFSET  # update low address to next position
+        finally:
+            self.lock.release()
+            return bfr
 
 
 class WS:
