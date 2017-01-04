@@ -16,6 +16,7 @@ __author__ = 'mm'
 
 WS1080_UPDATE_INTERVAL = 60.0  # According to docs the WS1080 updates current position every 48 sec
 ONE_HOUR = 60 * 60 * 1000
+WS_VERSION = "1.0.1"
 
 
 def rec_ok(rec):
@@ -140,6 +141,8 @@ class WS1080:
         self.logger.addHandler(fh)
         self.logger.addHandler(ch)
 
+        self.__version__ = WS_VERSION
+
         self.ws = ws.WS()
 
         self.timer = util.RepeatTimer(WS1080_UPDATE_INTERVAL, self.sync)
@@ -152,6 +155,8 @@ class WS1080:
         self.cl_daily = self.db_weather.daily
         self.cl_monthly = self.db_weather.monthly
         self.cl_yearly = self.db_weather.yearly
+
+        self.logger.info('Starting WS1080 version {}'.format(self.__version__))
 
     def die(self):
         self.timer.cancel()
@@ -170,7 +175,8 @@ class WS1080:
 
             if self.cl_min.count() == 0:
                 # Collection is empty, first time usage
-                self.logger.info("Update Total rain in ini file: from %.1f to %.1f" % (self.init_rain, rec['rain_total']))
+                self.logger.info("Update Total rain in ini file: from %.1f to %.1f" %
+                                 (self.init_rain, rec['rain_total']))
 
                 self.init_rain = rec['rain_total']
 
@@ -198,26 +204,30 @@ class WS1080:
             hour_stamp = base_time.replace(minute=0, second=0, microsecond=0)
             ts = util.msecs(hour_stamp)
             src_posts = self.cl_min.find({'time': {"$gte": ts}})
-            sum_post = posts_to_sum_post(src_posts, hour_stamp)
-            self.cl_hourly.replace_one({'time': ts}, sum_post, upsert=True)
+            if src_posts.count() > 0:
+                sum_post = posts_to_sum_post(src_posts, hour_stamp)
+                self.cl_hourly.replace_one({'time': ts}, sum_post, upsert=True)
 
             day_stamp = base_time.replace(hour=0, minute=0, second=0, microsecond=0)
             ts = util.msecs(day_stamp)
             src_posts = self.cl_hourly.find({'time': {"$gte": ts}})
-            sum_post = posts_to_sum_post(src_posts, day_stamp)
-            self.cl_daily.replace_one({'time': ts}, sum_post, upsert=True)
+            if src_posts.count() > 0:
+                sum_post = posts_to_sum_post(src_posts, day_stamp)
+                self.cl_daily.replace_one({'time': ts}, sum_post, upsert=True)
 
             month_stamp = base_time.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
             ts = util.msecs(month_stamp)
             src_posts = self.cl_daily.find({'time': {"$gte": ts}})
-            sum_post = posts_to_sum_post(src_posts, month_stamp)
-            self.cl_monthly.replace_one({'time': ts}, sum_post, upsert=True)
+            if src_posts.count() > 0:
+                sum_post = posts_to_sum_post(src_posts, month_stamp)
+                self.cl_monthly.replace_one({'time': ts}, sum_post, upsert=True)
 
             year_stamp = base_time.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
             ts = util.msecs(year_stamp)
             src_posts = self.cl_monthly.find({'time': {"$gte": ts}})
-            sum_post = posts_to_sum_post(src_posts, year_stamp)
-            self.cl_yearly.replace_one({'time': ts}, sum_post, upsert=True)
+            if src_posts.count() > 0:
+                sum_post = posts_to_sum_post(src_posts, year_stamp)
+                self.cl_yearly.replace_one({'time': ts}, sum_post, upsert=True)
 
             # Remove old records
             self.cl_min.remove({'time': {"$lt": util.msecs(base_time) - ONE_HOUR}})
