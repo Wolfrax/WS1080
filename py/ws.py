@@ -70,8 +70,7 @@ class WS:
             sys.exit(1)
         self.fixedPar = util.parse_data_def(self.dataDef)
         if self.fixedPar is None:
-            self.logger.warning("WS init: fixedPar is None, Length: %d, [0]: %x [1]: %x, terminating...",
-                                len(self.dataDef), self.dataDef[0], self.dataDef[1])
+            self.logger.warning("WS init: fixedPar is None, Length: %d terminating...", len(self.dataDef))
             sys.exit(1)
 
     def _get(self, address):

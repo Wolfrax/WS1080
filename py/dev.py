@@ -72,6 +72,7 @@ class Device:
                 timeout=DEVICE_CTRL_TIMEOUT)
         except usb.core.USBError as err:
             self.logger.warning('preamble: USBError - %s', err)
+            self.__init__()  # Try to reset the USB connection
             return None
         except:
             self.logger.warning('preamble: Unknown error - %s', sys.exc_info()[0])
@@ -95,13 +96,16 @@ class Device:
             result = self.dev.read(DEVICE_ENDPOINT_ADDR, buf, timeout=DEVICE_READ_TIMEOUT)
         except usb.core.USBError as err:
             self.logger.warning('read: USBError - %s', err)
+            self.__init__()  # Try to reset the USB connection
             return None
         except:
             self.logger.warning('read: Unknown error - %s', sys.exc_info()[0])
+            self.__init__()  # Try to reset the USB connection
             return None
 
         if not result or len(result) < buf:
             self.logger.warning('read: device read failed result: %d', result)
+            self.__init__()  # Try to reset the USB connection
             return None
 
         return list(result)
