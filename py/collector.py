@@ -16,7 +16,7 @@ __author__ = 'mm'
 
 WS1080_UPDATE_INTERVAL = 60.0  # According to docs the WS1080 updates current position every 48 sec
 ONE_HOUR = 60 * 60 * 1000
-WS_VERSION = "1.0.1"
+WS_VERSION = "1.0.2"
 
 
 def rec_ok(rec):
@@ -131,7 +131,7 @@ class WS1080:
             else logging.basicConfig(level=logging.INFO)
 
         self.logger = logging.getLogger('WS1080')
-        fh = RotatingFileHandler(self.init_logfile, mode='a', maxBytes=5 * 1024 * 1024, backupCount=2)
+        fh = RotatingFileHandler(self.init_logfile, mode='a', maxBytes=100 * 1024 * 1024, backupCount=2)
         fh.setLevel(logging.DEBUG)
         ch = logging.StreamHandler()
         ch.setLevel(logging.DEBUG)

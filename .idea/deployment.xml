@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="On explicit save action" serverName="rpi1">
+  <component name="PublishConfigData" autoUpload="On explicit save action" serverName="rpi1" uploadOnCheckin="6f78dec3-5264-40a1-9870-b24398b4e9b6">
     <serverData>
       <paths name="rpi1">
         <serverdata>
@@ -10,6 +10,7 @@
         </serverdata>
       </paths>
     </serverData>
+    <option name="myUploadOnCheckinName" value="rpi1" />
     <option name="myAutoUpload" value="ON_EXPLICIT_SAVE" />
   </component>
 </project>

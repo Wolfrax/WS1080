@@ -97,8 +97,15 @@ class WS:
         fixed_data = util.parse_data_def(data_def)
 
         if fixed_data is None:
-            self.logger.warning("read: wrong fixed data, length: %d, [0]: %x [1]: %x, returning None",
-                                len(data_def), data_def[0], data_def[1])
+            if len(data_def) > 1:
+                self.logger.warning("read: wrong fixed data, length: %d, [0]: %x [1]: %x, returning None",
+                                    len(data_def), data_def[0], data_def[1])
+            elif len(data_def) > 0:
+                self.logger.warning("read: wrong fixed data, length: %d, [0]: %x, returning None",
+                                    len(data_def), data_def[0])
+            else:
+                self.logger.warning("read: wrong fixed data, returning None")
+
             return None
 
         if ((fixed_data['state']['current_pos'] > E2PROM_END_ADDRESS) or
